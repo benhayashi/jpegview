@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -127,7 +127,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
-      <DelayLoadDLLs>WICLoader.dll;jxl_dec.dll;jxl_threads.dll;heif.dll;avif.dll;lcms2.dll;libraw.dll</DelayLoadDLLs>
+      <DelayLoadDLLs>WICLoader.dll;jxl_dec.dll;jxl_threads.dll;heif.dll;avif.dll;lcms2.dll;libraw.dll;d3d11.dll;dxgi.dll;d3dcompiler_47.dll</DelayLoadDLLs>
       <IgnoreSpecificDefaultLibraries>LIBCMT</IgnoreSpecificDefaultLibraries>
       <AdditionalOptions>/IGNORE:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -176,7 +176,7 @@
       </ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
-      <DelayLoadDLLs>WICLoader.dll;jxl_dec.dll;jxl_threads.dll;heif.dll;avif.dll;lcms2.dll;libraw.dll</DelayLoadDLLs>
+      <DelayLoadDLLs>WICLoader.dll;jxl_dec.dll;jxl_threads.dll;heif.dll;avif.dll;lcms2.dll;libraw.dll;d3d11.dll;dxgi.dll;d3dcompiler_47.dll</DelayLoadDLLs>
       <IgnoreSpecificDefaultLibraries>LIBCMT</IgnoreSpecificDefaultLibraries>
       <AdditionalOptions>/IGNORE:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -231,7 +231,7 @@
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <DelayLoadDLLs>WICLoader.dll;jxl_dec.dll;jxl_threads.dll;heif.dll;avif.dll;lcms2.dll;libraw.dll</DelayLoadDLLs>
+      <DelayLoadDLLs>WICLoader.dll;jxl_dec.dll;jxl_threads.dll;heif.dll;avif.dll;lcms2.dll;libraw.dll;d3d11.dll;dxgi.dll;d3dcompiler_47.dll</DelayLoadDLLs>
       <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalOptions>/IGNORE:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -284,7 +284,7 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <DelayLoadDLLs>WICLoader.dll;jxl_dec.dll;jxl_threads.dll;heif.dll;avif.dll;lcms2.dll;libraw.dll</DelayLoadDLLs>
+      <DelayLoadDLLs>WICLoader.dll;jxl_dec.dll;jxl_threads.dll;heif.dll;avif.dll;lcms2.dll;libraw.dll;d3d11.dll;dxgi.dll;d3dcompiler_47.dll</DelayLoadDLLs>
       <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalOptions>/IGNORE:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -312,6 +312,8 @@
     <ClCompile Include="FileExtensionsRegistry.cpp" />
     <ClCompile Include="FileList.cpp" />
     <ClCompile Include="HashCompareLPCTSTR.cpp" />
+    <ClCompile Include="HDRRendererD3D11.cpp" />
+    <ClCompile Include="HDRToneMapper.cpp" />
     <ClCompile Include="HEIFWrapper.cpp" />
     <ClCompile Include="HelpDlg.cpp" />
     <ClCompile Include="Helpers.cpp" />
@@ -403,6 +405,8 @@
     <ClInclude Include="FileExtensionsRegistry.h" />
     <ClInclude Include="FileList.h" />
     <ClInclude Include="HashCompareLPCTSTR.h" />
+    <ClInclude Include="HDRRendererD3D11.h" />
+    <ClInclude Include="HDRToneMapper.h" />
     <ClInclude Include="HEIFWrapper.h" />
     <ClInclude Include="HelpDlg.h" />
     <ClInclude Include="Helpers.h" />

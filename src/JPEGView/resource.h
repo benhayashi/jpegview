@@ -243,6 +243,7 @@
 #define IDM_FIT_WINDOW_TO_IMAGE 12005		// :KeyMap: toggle fit window automatically to image, avoiding black borders
 #define IDM_SPAN_SCREENS	12010		// :KeyMap: span over all screens
 #define IDM_TOGGLE_MONITOR	14900		// :KeyMap: move to other monitor
+#define IDM_TOGGLE_HDR		14950		// :KeyMap: toggle HDR display mode (or SDR tone mapped preview)
 #define IDM_FULL_SCREEN_MODE 12011		// :KeyMap: toggle full screen mode
 #define IDM_HIDE_TITLE_BAR  12012		// :KeyMap: toggle hiding window title bar.  Note: in this mode, the window can't be manually resized
 #define IDM_ALWAYS_ON_TOP   12013		// :KeyMap: toggle window mode to always on top

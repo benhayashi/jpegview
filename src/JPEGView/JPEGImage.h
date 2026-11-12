@@ -217,6 +217,13 @@ public:
 	// Gets the DIB last processed. If none, the last used parameters are taken to generate the DIB - if bGenerateDIBIfNeeded is true 
 	void* DIBPixelsLastProcessed(bool bGenerateDIBIfNeeded);
 
+	// HDR support
+	bool HasHDRData() const { return m_bIsHDR && m_pHDRPixels != NULL; }
+	void* GetHDRPixels() const { return m_pHDRPixels; }
+	bool IsHDRFloat32() const { return m_bHDRIsFloat32; }
+	float GetMaxLuminance() const { return m_fMaxLuminance; }
+	void SetHDRData(void* pHDRPixels, bool bIsFloat32, float fMaxLuminance);
+
 	// Gets the DIB pixels of the last processed thumbnail image, NULL if none or invalid
 	void* DIBPixelsLastThumbnail() { return (m_pThumbnail == NULL) ? NULL : m_pThumbnail->DIBPixelsLastProcessed(false); }
 
@@ -438,6 +445,12 @@ private:
 	bool m_bLDCOwned;
 	float m_fColorCorrectionFactors[6];
 	float m_fColorCorrectionFactorsNull[6];
+
+	// HDR data buffers
+	bool m_bIsHDR;
+	void* m_pHDRPixels;
+	bool m_bHDRIsFloat32;
+	float m_fMaxLuminance;
 
 	// Internal GetDIB() implementation combining unsharp mask and (low quality) rotation with GetDIB().
 	// pUnsharpMaskParams and pTrapezoid can be null if not used.

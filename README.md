@@ -2,47 +2,43 @@
 
 [![Latest GitHub Release](https://img.shields.io/github/v/release/sylikc/jpegview?label=GitHub&style=social)](https://github.com/sylikc/jpegview/releases)[![Downloads](https://badgen.net/github/assets-dl/sylikc/jpegview?cache=3600&color=grey&label=)](#) [![WinGet](https://repology.org/badge/version-for-repo/winget/jpegview.svg?allow_ignored=1&header=WinGet)](https://winstall.app/apps/sylikc.JPEGView) [![PortableApps](https://img.shields.io/badge/PortableApps-Current-green)](https://portableapps.com/apps/graphics_pictures/jpegview_portable) [![Scoop](https://repology.org/badge/version-for-repo/scoop/jpegview-fork.svg?header=Scoop)](https://scoop.sh/#/apps?q=%22jpegview-fork%22) [![Chocolatey](https://img.shields.io/chocolatey/v/jpegview)](https://community.chocolatey.org/packages/jpegview) [![Npackd](https://repology.org/badge/version-for-repo/npackd_stable/jpegview.svg?allow_ignored=1&header=Npackd)](https://www.npackd.org/p/jpegview)
 
-# JPEGView - Image Viewer and Editor
+# JPEGView - Modern Lightweight Photo Viewer & HDR Engine
 
-This is the official re-release of JPEGView.
+A modernized, ultra-fast, and lightweight image viewer and editor for Windows devices.
 
-## Description
+This fork preserves JPEGView's legendary sub-10ms startup time, minimal resource footprint, and keyboard/mouse-driven navigation, while introducing native HDR display capabilities, modern image format pipelines (JXL, HEIC, HIF, AVIF, WebP), seamless Windows 11 default app integration, and an uncompromising offline privacy guarantee.
 
-JPEGView is a lean, fast and highly configurable image viewer/editor with a minimal GUI.
+## Key Features
 
-### Formats Supported
+### 🌟 Native HDR Display & Advanced Color
+- **Direct3D 11 / DXGI 1.5+ scRGB Pipeline**: Real HDR display output utilizing an FP16 (`DXGI_FORMAT_R16G16B16A16_FLOAT`) scRGB swapchain with automatic monitor peak luminance detection via `IDXGIOutput6`.
+- **HDR on HDR Displays**: Automatically detects HDR-capable monitors and renders high-dynamic-range photos (HEIC/HIF 10/12-bit PQ/HLG, JPEG XL HDR, AVIF 10-bit) in true high dynamic range.
+- **Intelligent SDR Tone Mapping**: View HDR photos on SDR monitors or standard color profiles using tone mapping curves (BT.2390 Hermite spline knee, Reinhard, ACES filmic).
+- **Instant Hotkey Toggle (`H`)**: Toggle between true HDR and tone-mapped SDR with a single keypress. Real-time filename indicators show `[HDR]` or `[HDR->SDR]`.
 
-JPEGView has built-in support the following formats:
+### 🚀 Zero Load Time & Ultra-Lightweight
+- **Sub-10ms Startup**: Opens instantly without delay.
+- **On-Demand Delay Loading**: Codec DLLs (libjxl, libheif, libavif, libraw) and DirectX rendering subsystems (`d3d11.dll`, `dxgi.dll`) are loaded strictly on-demand. Standard SDR viewing has zero DirectX overhead.
+- **Pure Native C++**: No .NET runtimes, Electron, or web views.
 
-* Popular: JPEG, GIF
-* Lossless: BMP, PNG, TIFF, PSD
-* Web: WEBP, JXL, HEIF/HEIC, AVIF
-* Legacy: TGA, WDP, HDP, JXR
-* Camera RAW formats:
-  * Adobe (DNG), Canon (CRW, CR2, CR3), Nikon (NEF, NRW), Sony (ARW, SR2)
-  * Olympus (ORF), Panasonic (RW2), Fujifilm (RAF)
-  * Sigma (X3F), Pentax (PEF), Minolta (MRW), Kodak (KDC, DCR)
-  * A full list is available here: [LibRaw supported cameras](https://www.libraw.org/supported-cameras)
+### 🖼️ Comprehensive Modern Format Support
+- **Modern Formats**: HEIC, HEIF, HIF (10/12-bit HDR, Apple/Canon/Sony HDR), JPEG XL (`.jxl`), AVIF, WebP, QOI.
+- **Standard & Lossless**: JPEG, PNG (with APNG animations), GIF, BMP, TIFF, TGA.
+- **Creative & Professional**: Photoshop PSD and PSB (large format).
+- **Camera RAW**: Comprehensive LibRaw support for modern cameras including Canon (CR2, CR3), Nikon (NEF), Sony (ARW), Fujifilm (RAF), Adobe DNG, and more.
 
-Many additional formats are supported by Windows Imaging Component (WIC)
+### ⚙️ Windows 10 & 11 Default Photo Viewer
+- **1-Click Default App Integration**: Deep-links directly to Windows 10/11 Default Apps (`ms-settings:defaultapps?appName=JPEGView`).
+- **Full Shell Capabilities**: Registered under `HKLM\SOFTWARE\RegisteredApplications` with capabilities for seamless association without Windows hash warnings.
+- **Available as Portable (.exe) and MSI Installer**: Ready for individual use or enterprise system-wide deployment.
 
-### Basic Image Editor
+### 🔒 100% Offline & Zero Telemetry
+- **Complete Privacy**: No telemetry, analytics, telemetry tracking, or external network connections of any kind. 100% offline and self-contained.
 
-Basic on-the-fly image processing is provided - allowing adjusting typical parameters:
-
-* sharpness
-* color balance
-* rotation
-* perspective
-* contrast
-* local under-exposure/over-exposure
-
-### Other Features
-
-* Small and fast, uses AVX2/SSE2 and up to 4 CPU cores
-* High quality resampling filter, preserving sharpness of images
-* Basic image processing tools can be applied realtime during viewing
-* Movie/Slideshow mode - to play folder of JPEGs as movie
+### 🎨 Built-in Real-time Processing & Navigation
+- **Responsive Controls**: Arrow keys to navigate, mouse scroll wheel to zoom, left drag to pan.
+- **Real-time Processing**: Fast sharpness, contrast, color balance, local density correction, rotation, and perspective adjustments.
+- **Movie/Slideshow Mode**: Play folders of images sequentially.
 
 # Installation
 

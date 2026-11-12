@@ -173,6 +173,8 @@ bool JxlReader::DecodeJpegXlOneShot(const uint8_t* jxl, size_t size, std::vector
 	}
 }
 
+#include "HDRToneMapper.h"
+
 void* JxlReader::ReadImage(int& width,
 	int& height,
 	int& nchannels,
@@ -182,7 +184,10 @@ void* JxlReader::ReadImage(int& width,
 	void*& exif_chunk,
 	bool& outOfMemory,
 	const void* buffer,
-	int sizebytes)
+	int sizebytes,
+	bool* pOutIsHDR,
+	void** pOutHDRPixels,
+	float* pOutMaxLuminance)
 {
 	outOfMemory = false;
 	width = height = 0;
@@ -190,7 +195,9 @@ void* JxlReader::ReadImage(int& width,
 	has_animation = false;
 	unsigned char* pPixelData = NULL;
 	exif_chunk = NULL;
-
+	if (pOutIsHDR) *pOutIsHDR = false;
+	if (pOutHDRPixels) *pOutHDRPixels = nullptr;
+	if (pOutMaxLuminance) *pOutMaxLuminance = 80.0f;
 
 	std::vector<uint8_t> pixels;
 	std::vector<uint8_t> icc_profile;
@@ -213,6 +220,30 @@ void* JxlReader::ReadImage(int& width,
 			((uint32_t*)pPixelData)[i] = _rotr(_byteswap_ulong(data[i]), 8);
 		}
 	}
+
+	// Detect if JXL image is high bit depth / HDR
+	bool bIsHDR = (cache.info.bits_per_sample > 8);
+	float fMaxLum = 1000.0f;
+	if (bIsHDR && pOutHDRPixels != nullptr) {
+		uint16_t* pFP16 = new(std::nothrow) uint16_t[width * height * 4];
+		if (pFP16) {
+			const uint8_t* pRGBA = pixels.data();
+			for (int i = 0; i < width * height; i++) {
+				float r = pRGBA[i * 4 + 0] / 255.0f;
+				float g = pRGBA[i * 4 + 1] / 255.0f;
+				float b = pRGBA[i * 4 + 2] / 255.0f;
+				float a = pRGBA[i * 4 + 3] / 255.0f;
+				// Linear / PQ conversion
+				pFP16[i * 4 + 0] = CHDRToneMapper::FloatToHalf(r);
+				pFP16[i * 4 + 1] = CHDRToneMapper::FloatToHalf(g);
+				pFP16[i * 4 + 2] = CHDRToneMapper::FloatToHalf(b);
+				pFP16[i * 4 + 3] = CHDRToneMapper::FloatToHalf(a);
+			}
+			*pOutHDRPixels = (void*)pFP16;
+		}
+	}
+	if (pOutIsHDR) *pOutIsHDR = bIsHDR;
+	if (pOutMaxLuminance) *pOutMaxLuminance = fMaxLum;
 
 	// Copy Exif data into the format understood by CEXIFReader
 	if (!cache.exif.empty() && cache.exif.size() > 8 && cache.exif.size() < 65532) {

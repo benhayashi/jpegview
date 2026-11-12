@@ -38,6 +38,8 @@
 #include "ProcessingThreadPool.h"
 #include "PaintMemDCMgr.h"
 #include "PanelMgr.h"
+#include "HDRRendererD3D11.h"
+#include "HDRToneMapper.h"
 #include "ZoomNavigatorCtl.h"
 #include "ImageProcPanelCtl.h"
 #include "WndButtonPanelCtl.h"
@@ -326,6 +328,10 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 		SWP_NOZORDER | SWP_NOCOPYBITS | SWP_NOACTIVATE | SWP_NOREDRAW);
 	m_clientRect = m_bFullScreenMode ? m_monitorRect : CMultiMonitorSupport::GetDefaultClientRectInWindowMode(sp.AutoFullScreen());
 
+	// Probe HDR monitor display capabilities (scRGB / DXGI Advanced Color)
+	float fMaxLum = 80.0f, fMinLum = 0.001f, fSDRWhite = 80.0f;
+	CHDRRendererD3D11::Instance().QueryDisplayHDRCapabilities(m_hWnd, fMaxLum, fMinLum, fSDRWhite);
+
 	// Create image processing panel at bottom of screen
 	m_pImageProcPanelCtl = new CImageProcPanelCtl(this, m_pImageProcParams, &m_bLDC, &m_bAutoContrast);
 	m_pPanelMgr->AddPanelController(m_pImageProcPanelCtl);
@@ -531,6 +537,19 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			CPoint ptDIBStart = HelpersGUI::DrawDIB32bppWithBlackBorders(dc, bmInfo, pDIBData, backBrush, m_clientRect, clippedSize, m_DIBOffsets);
 			// The DIB is also blitted into the memory DCs of the panels
 			memDCMgr.BlitImageToMemDC(pDIBData, &bmInfo, ptDIBStart, m_pNavPanelCtl->CurrentBlendingFactor());
+
+			if (m_pCurrentImage != NULL && m_pCurrentImage->HasHDRData() && CHDRRendererD3D11::Instance().IsHDRAvailable() && CHDRRendererD3D11::Instance().IsHDREnabled()) {
+				if (!CHDRRendererD3D11::Instance().IsInitialized()) {
+					CHDRRendererD3D11::Instance().Initialize(m_hWnd);
+				}
+				CHDRRendererD3D11::Instance().UploadHDRImage(m_pCurrentImage->OrigSize().cx, m_pCurrentImage->OrigSize().cy,
+					m_pCurrentImage->GetHDRPixels(), m_pCurrentImage->IsHDRFloat32(), m_pCurrentImage->GetMaxLuminance());
+				RECT targetRect = { ptDIBStart.x, ptDIBStart.y, ptDIBStart.x + clippedSize.cx, ptDIBStart.y + clippedSize.cy };
+				RECT sourceRect = { offsetsInImage.x, offsetsInImage.y, 
+					offsetsInImage.x + (int)(clippedSize.cx / m_dRealizedZoom + 0.5), 
+					offsetsInImage.y + (int)(clippedSize.cy / m_dRealizedZoom + 0.5) };
+				CHDRRendererD3D11::Instance().Render(m_hWnd, targetRect, sourceRect);
+			}
 		}
 		if (m_bZoomMode) m_offsets = unlimitedOffsets;
 	}
@@ -673,6 +692,10 @@ void CMainDlg::DisplayFileName(const CRect& imageProcessingArea, CDC& dc, double
 	if (m_bShowFileName) {
 		HelpersGUI::SelectDefaultFileNameFont(dc);
 		CString sFileName = Helpers::GetFileInfoString(CSettingsProvider::This().FileNameFormat(), m_pCurrentImage, m_pFileList, realizedZoom);
+		if (m_pCurrentImage != NULL && m_pCurrentImage->HasHDRData()) {
+			bool bHDRActive = CHDRRendererD3D11::Instance().IsHDRAvailable() && CHDRRendererD3D11::Instance().IsHDREnabled();
+			sFileName = (bHDRActive ? _T("[HDR] ") : _T("[HDR->SDR] ")) + sFileName;
+		}
 		HelpersGUI::DrawTextBordered(dc, sFileName, CRect(HelpersGUI::ScaleToScreen(2) + imageProcessingArea.left, 0, imageProcessingArea.right, HelpersGUI::ScaleToScreen(30)), DT_LEFT); 
 	}
 }
@@ -2074,6 +2097,9 @@ void CMainDlg::ExecuteCommand(int nCommand) {
 		case IDM_TOGGLE_MONITOR:
 			ToggleMonitor();
 			break;
+		case IDM_TOGGLE_HDR:
+			ToggleHDRMode();
+			break;
 		case IDM_EXCHANGE_PROC_PARAMS:
 			ExchangeProcessingParams();
 			break;
@@ -3184,6 +3210,11 @@ void CMainDlg::ToggleMonitor() {
 		SetWindowPos(HWND_TOP, &m_monitorRect, SWP_NOZORDER);
 		this->GetClientRect(&m_clientRect);
 	}
+}
+
+void CMainDlg::ToggleHDRMode() {
+	CHDRRendererD3D11::Instance().ToggleHDR();
+	this->Invalidate(FALSE);
 }
 
 CRect CMainDlg::GetZoomTextRect(CRect imageProcessingArea) {

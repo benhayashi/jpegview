@@ -364,6 +364,7 @@ private:
 	void AfterNewImageLoaded(bool bSynchronize, bool bAfterStartup, bool noAdjustWindow);
 	CRect ScreenToDIB(const CSize& sizeDIB, const CRect& rect);
 	void ToggleMonitor();
+	void ToggleHDRMode();
 	CRect GetZoomTextRect(CRect imageProcessingArea);
 	void EditINIFile(bool bGlobalINI);
 	int GetLoadErrorAfterOpenFile();

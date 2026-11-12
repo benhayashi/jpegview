@@ -214,16 +214,17 @@ LRESULT CFileExtensionsDlg::OnOK(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 	}
 
 	if (sProtectedByWindowsEndings.GetLength() > 0) {
-		CString msg(CNLS::GetString(_T("The following image extensions are protected by the operating system.")));
+		CString msg(CNLS::GetString(_T("The following image extensions are protected by Windows:")));
 		msg += _T("\n");
 		msg += sProtectedByWindowsEndings;
 		msg += _T("\n\n");
-		msg += CNLS::GetString(_T("Windows 8 (and above) blocks JPEGView from changing the default program for these file extensions."));
-		msg += _T("\n");
-		msg += CNLS::GetString(_T("Use the 'Default Programs' configuration dialog from the operating system instead."));
-		msg += _T("\n");
-		msg += CNLS::GetString(_T("Alternatively, right-click an image file of the given type in Windows Explorer and select 'Open with... > Choose default program'"));
-		::MessageBox(m_hWnd, msg, CNLS::GetString(_T("Warning")), MB_OK | MB_ICONWARNING);
+		msg += CNLS::GetString(_T("Windows blocks direct modification of these default apps.\nWould you like to open Windows 'Default Apps' settings now to set JPEGView as default?"));
+		if (::MessageBox(m_hWnd, msg, CNLS::GetString(_T("Set as Default Photo Viewer")), MB_YESNO | MB_ICONQUESTION) == IDYES) {
+			HINSTANCE hInst = ::ShellExecute(m_hWnd, _T("open"), _T("ms-settings:defaultapps?appName=JPEGView"), NULL, NULL, SW_SHOWNORMAL);
+			if ((INT_PTR)hInst <= 32) {
+				::ShellExecute(m_hWnd, _T("open"), _T("ms-settings:defaultapps"), NULL, NULL, SW_SHOWNORMAL);
+			}
+		}
 	}
 
 	if (sFailedEndings.GetLength() > 0) {
@@ -290,6 +291,7 @@ void CFileExtensionsDlg::FillFileExtensionsList() {
 	InsertExtension(_T("*.avif"), FormatHint(CNLS::GetString(_T("%s images")), _T("AV1 Image File")));
 	InsertExtension(_T("*.heif"), FormatHint(CNLS::GetString(_T("%s images")), _T("High Efficiency Image File")));
 	InsertExtension(_T("*.heic"), FormatHint(CNLS::GetString(_T("%s images")), _T("High Efficiency Image Container")));
+	InsertExtension(_T("*.hif"), FormatHint(CNLS::GetString(_T("%s images")), _T("High Efficiency Image File (HDR)")));
 	InsertExtension(_T("*.qoi"), FormatHint(CNLS::GetString(_T("%s images")), _T("Quite OK Image")));
 	InsertExtension(_T("*.psd"), FormatHint(CNLS::GetString(_T("%s images")), _T("Photoshop Document")));
 	InsertExtensions(CSettingsProvider::This().FilesProcessedByWIC(), CNLS::GetString(_T("%s images (processed by Window Imaging Component - WIC)")));

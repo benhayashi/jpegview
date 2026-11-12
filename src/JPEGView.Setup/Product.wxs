@@ -436,9 +436,27 @@
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".avif" Value="" Type="string" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".heif" Value="" Type="string" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".heic" Value="" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".hif" Value="" Type="string" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".tga" Value="" Type="string" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".qoi" Value="" Type="string" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".psd" Value="" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".psb" Value="" Type="string" />
+						<!-- Windows 10/11 RegisteredApplications Capabilities -->
+						<RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications" Name="JPEGView" Value="SOFTWARE\JPEGView\Capabilities" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\JPEGView\Capabilities" Name="ApplicationName" Value="!(loc.ApplicationName)" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\JPEGView\Capabilities" Name="ApplicationDescription" Value="!(loc.ProductDescription)" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\JPEGView\Capabilities\FileAssociations" Name=".jpg" Value="JPEGView.Document" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\JPEGView\Capabilities\FileAssociations" Name=".jpeg" Value="JPEGView.Document" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\JPEGView\Capabilities\FileAssociations" Name=".jfif" Value="JPEGView.Document" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\JPEGView\Capabilities\FileAssociations" Name=".png" Value="JPEGView.Document" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\JPEGView\Capabilities\FileAssociations" Name=".bmp" Value="JPEGView.Document" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\JPEGView\Capabilities\FileAssociations" Name=".gif" Value="JPEGView.Document" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\JPEGView\Capabilities\FileAssociations" Name=".webp" Value="JPEGView.Document" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\JPEGView\Capabilities\FileAssociations" Name=".jxl" Value="JPEGView.Document" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\JPEGView\Capabilities\FileAssociations" Name=".avif" Value="JPEGView.Document" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\JPEGView\Capabilities\FileAssociations" Name=".heif" Value="JPEGView.Document" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\JPEGView\Capabilities\FileAssociations" Name=".heic" Value="JPEGView.Document" Type="string" />
+						<RegistryValue Root="HKLM" Key="SOFTWARE\JPEGView\Capabilities\FileAssociations" Name=".hif" Value="JPEGView.Document" Type="string" />
 						<!-- csFileEndingsRAW -->
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".pef" Value="" Type="string" />
 						<RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\JPEGView.exe\SupportedTypes" Name=".dng" Value="" Type="string" />

@@ -4,6 +4,8 @@
 #include "MaxImageDef.h"
 #include "ICCProfileTransform.h"
 
+#include "HDRToneMapper.h"
+
 void * HeifReader::ReadImage(int &width,
 					   int &height,
 					   int &nchannels,
@@ -12,11 +14,17 @@ void * HeifReader::ReadImage(int &width,
 					   bool &outOfMemory,
 					   int frame_index,
 					   const void *buffer,
-					   int sizebytes)
+					   int sizebytes,
+					   bool* pOutIsHDR,
+					   void** pOutHDRPixels,
+					   float* pOutMaxLuminance)
 {
 	outOfMemory = false;
 	width = height = 0;
 	nchannels = 4;
+	if (pOutIsHDR) *pOutIsHDR = false;
+	if (pOutHDRPixels) *pOutHDRPixels = nullptr;
+	if (pOutMaxLuminance) *pOutMaxLuminance = 80.0f;
 
 	unsigned char* pPixelData = NULL;
 	exif_chunk = NULL;
@@ -63,8 +71,57 @@ void * HeifReader::ReadImage(int &width,
 				o++;
 			}
 		}
-	}
 	ICCProfileTransform::DeleteTransform(transform);
+
+	// Detect HDR characteristics (10/12-bit depth or NCLX PQ/HLG)
+	bool bIsHDR = false;
+	float fMaxLuminance = 1000.0f;
+	if (handle.get_luma_bits_per_pixel() > 8) {
+		bIsHDR = true;
+	}
+	if (handle.get_color_profile_type() == heif_color_profile_type_nclx) {
+		try {
+			auto nclx = handle.get_nclx_color_profile();
+			if (nclx.get_transfer_characteristics() == 16 || // SMPTE ST 2084 (PQ)
+				nclx.get_transfer_characteristics() == 18) { // ARIB STD-B67 (HLG)
+				bIsHDR = true;
+			}
+		} catch (...) {}
+	}
+
+	if (bIsHDR && pOutHDRPixels != nullptr) {
+		try {
+			heif::Image hdrImage = handle.decode_image(heif_colorspace_RGB, heif_chroma_interleaved_RRGGBBAA_LE);
+			int hdrStride = 0;
+			uint8_t* hdrData = hdrImage.get_plane(heif_channel_interleaved, &hdrStride);
+			int hdrW = hdrImage.get_width(heif_channel_interleaved);
+			int hdrH = hdrImage.get_height(heif_channel_interleaved);
+			if (hdrData && hdrW > 0 && hdrH > 0) {
+				uint16_t* pFP16 = new(std::nothrow) uint16_t[hdrW * hdrH * 4];
+				if (pFP16) {
+					int bitDepth = handle.get_luma_bits_per_pixel();
+					if (bitDepth < 10) bitDepth = 10;
+					float maxVal = (float)((1 << bitDepth) - 1);
+					for (int y = 0; y < hdrH; y++) {
+						uint16_t* pRow = (uint16_t*)(hdrData + y * hdrStride);
+						for (int x = 0; x < hdrW; x++) {
+							float r = (float)pRow[x * 4 + 0] / maxVal;
+							float g = (float)pRow[x * 4 + 1] / maxVal;
+							float b = (float)pRow[x * 4 + 2] / maxVal;
+							float a = (float)pRow[x * 4 + 3] / maxVal;
+							pFP16[(y * hdrW + x) * 4 + 0] = CHDRToneMapper::FloatToHalf(r);
+							pFP16[(y * hdrW + x) * 4 + 1] = CHDRToneMapper::FloatToHalf(g);
+							pFP16[(y * hdrW + x) * 4 + 2] = CHDRToneMapper::FloatToHalf(b);
+							pFP16[(y * hdrW + x) * 4 + 3] = CHDRToneMapper::FloatToHalf(a);
+						}
+					}
+					*pOutHDRPixels = (void*)pFP16;
+				}
+			}
+		} catch (...) {}
+	}
+	if (pOutIsHDR) *pOutIsHDR = bIsHDR;
+	if (pOutMaxLuminance) *pOutMaxLuminance = fMaxLuminance;
 
 	std::vector<heif_item_id> exif_blocks = handle.get_list_of_metadata_block_IDs("Exif");
 

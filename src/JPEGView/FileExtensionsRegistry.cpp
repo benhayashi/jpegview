@@ -590,6 +590,11 @@ public:
 };
 
 void CFileExtensionsRegistrationWindows8::LaunchApplicationAssociationDialog() {
+	HINSTANCE hInst = ::ShellExecute(NULL, _T("open"), _T("ms-settings:defaultapps?appName=JPEGView"), NULL, NULL, SW_SHOWNORMAL);
+	if ((INT_PTR)hInst > 32) {
+		return;
+	}
+
 	const GUID CLSID_ApplicationAssociationRegistrationUI_ = { 0x1968106d, 0xf3b5, 0x44cf, { 0x89, 0x0e, 0x11, 0x6f, 0xcb, 0x9e, 0xce, 0xf1 } };
 
 	IApplicationAssociationRegistrationUI_ *applicationAssociationRegistrationUI = NULL;
@@ -604,6 +609,8 @@ void CFileExtensionsRegistrationWindows8::LaunchApplicationAssociationDialog() {
 		applicationAssociationRegistrationUI->AddRef();
 		applicationAssociationRegistrationUI->LaunchAdvancedAssociationUI(L"JPEGView");
 		applicationAssociationRegistrationUI->Release();
+	} else {
+		::ShellExecute(NULL, _T("open"), _T("ms-settings:defaultapps"), NULL, NULL, SW_SHOWNORMAL);
 	}
 }
 

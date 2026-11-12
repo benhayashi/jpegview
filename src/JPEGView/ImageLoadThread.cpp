@@ -788,7 +788,10 @@ void CImageLoadThread::ProcessReadJXLRequest(CRequest* request) {
 			int nWidth, nHeight, nBPP, nFrameCount, nFrameTimeMs;
 			bool bHasAnimation;
 			void* pEXIFData;
-			uint8* pPixelData = (uint8*)JxlReader::ReadImage(nWidth, nHeight, nBPP, bHasAnimation, nFrameCount, nFrameTimeMs, pEXIFData, request->OutOfMemory, pBuffer, nFileSize);
+			bool bIsHDR = false;
+			void* pHDRPixels = nullptr;
+			float fMaxLum = 1000.0f;
+			uint8* pPixelData = (uint8*)JxlReader::ReadImage(nWidth, nHeight, nBPP, bHasAnimation, nFrameCount, nFrameTimeMs, pEXIFData, request->OutOfMemory, pBuffer, nFileSize, &bIsHDR, &pHDRPixels, &fMaxLum);
 			if (pPixelData != NULL) {
 				if (bHasAnimation)
 					m_sLastJxlFileName = sFileName;
@@ -798,6 +801,9 @@ void CImageLoadThread::ProcessReadJXLRequest(CRequest* request) {
 					*pImage32++ = Helpers::AlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency());
 
 				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, pEXIFData, 4, 0, IF_JXL, bHasAnimation, request->FrameIndex, nFrameCount, nFrameTimeMs);
+				if (bIsHDR && pHDRPixels) {
+					request->Image->SetHDRData(pHDRPixels, false, fMaxLum);
+				}
 				free(pEXIFData);
 			} else {
 				DeleteCachedJxlDecoder();
@@ -924,7 +930,10 @@ void CImageLoadThread::ProcessReadHEIFRequest(CRequest* request) {
 			nFrameCount = 1;
 			nFrameTimeMs = 0;
 			void* pEXIFData;
-			uint8* pPixelData = (uint8*)HeifReader::ReadImage(nWidth, nHeight, nBPP, nFrameCount, pEXIFData, request->OutOfMemory, request->FrameIndex, pBuffer, nFileSize);
+			bool bIsHDR = false;
+			void* pHDRPixels = nullptr;
+			float fMaxLum = 1000.0f;
+			uint8* pPixelData = (uint8*)HeifReader::ReadImage(nWidth, nHeight, nBPP, nFrameCount, pEXIFData, request->OutOfMemory, request->FrameIndex, pBuffer, nFileSize, &bIsHDR, &pHDRPixels, &fMaxLum);
 			if (pPixelData != NULL) {
 				// Multiply alpha value into each AABBGGRR pixel
 				uint32* pImage32 = (uint32*)pPixelData;
@@ -932,6 +941,9 @@ void CImageLoadThread::ProcessReadHEIFRequest(CRequest* request) {
 					*pImage32++ = Helpers::AlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency());
 
 				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, pEXIFData, nBPP, 0, IF_HEIF, false, request->FrameIndex, nFrameCount, nFrameTimeMs);
+				if (bIsHDR && pHDRPixels) {
+					request->Image->SetHDRData(pHDRPixels, false, fMaxLum);
+				}
 				free(pEXIFData);
 			}
 		}

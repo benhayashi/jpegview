@@ -156,9 +156,19 @@ CJPEGImage::CJPEGImage(int nWidth, int nHeight, void* pPixels, void* pEXIFData, 
 
 	// Initialize to INI value, may be overriden later by parameter DB
 	memcpy(m_fColorCorrectionFactors, CSettingsProvider::This().ColorCorrectionAmounts(), sizeof(m_fColorCorrectionFactors));
+
+	m_bIsHDR = false;
+	m_pHDRPixels = NULL;
+	m_bHDRIsFloat32 = false;
+	m_fMaxLuminance = 80.0f;
 }
 
 CJPEGImage::~CJPEGImage(void) {
+	if (m_pHDRPixels != NULL) {
+		if (m_bHDRIsFloat32) delete[] (float*)m_pHDRPixels;
+		else delete[] (uint16_t*)m_pHDRPixels;
+		m_pHDRPixels = NULL;
+	}
 	delete[] m_pOrigPixels;
 	m_pOrigPixels = NULL;
 	delete[] m_pDIBPixels;
@@ -192,6 +202,17 @@ CJPEGImage::~CJPEGImage(void) {
 	m_pCachedProcessedHistogram = NULL;
 	delete m_pRawMetadata;
 	m_pRawMetadata = NULL;
+}
+
+void CJPEGImage::SetHDRData(void* pHDRPixels, bool bIsFloat32, float fMaxLuminance) {
+	if (m_pHDRPixels != NULL) {
+		if (m_bHDRIsFloat32) delete[] (float*)m_pHDRPixels;
+		else delete[] (uint16_t*)m_pHDRPixels;
+	}
+	m_pHDRPixels = pHDRPixels;
+	m_bHDRIsFloat32 = bIsFloat32;
+	m_fMaxLuminance = fMaxLuminance;
+	m_bIsHDR = (pHDRPixels != NULL);
 }
 
 bool CJPEGImage::CanUseLosslessJPEGTransformations() {
