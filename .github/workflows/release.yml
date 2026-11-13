@@ -45,7 +45,7 @@ jobs:
       - name: Build x64 Solution
         shell: cmd
         run: |
-          msbuild.exe /p:Configuration=Release /p:Platform=x64 src\JPEGView.sln
+          msbuild.exe /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 src\JPEGView.sln
 
       - name: Stage x64 Artifacts
         shell: pwsh
@@ -113,7 +113,7 @@ jobs:
       - name: Build Win32 Solution
         shell: cmd
         run: |
-          msbuild.exe /p:Configuration=Release /p:Platform=Win32 src\JPEGView.sln
+          msbuild.exe /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v143 src\JPEGView.sln
 
       - name: Stage Win32 Artifacts
         shell: pwsh
