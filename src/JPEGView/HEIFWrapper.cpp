@@ -79,14 +79,17 @@ void * HeifReader::ReadImage(int &width,
 	if (handle.get_luma_bits_per_pixel() > 8) {
 		bIsHDR = true;
 	}
-	if (handle.get_color_profile_type() == heif_color_profile_type_nclx) {
-		try {
-			auto nclx = handle.get_nclx_color_profile();
-			if (nclx.get_transfer_characteristics() == 16 || // SMPTE ST 2084 (PQ)
-				nclx.get_transfer_characteristics() == 18) { // ARIB STD-B67 (HLG)
-				bIsHDR = true;
+	if (handle.get_raw_image_handle() != nullptr) {
+		heif_color_profile_type profileType = heif_image_handle_get_color_profile_type(handle.get_raw_image_handle());
+		if (profileType == heif_color_profile_type_nclx) {
+			struct heif_color_profile_nclx* nclx = nullptr;
+			if (heif_image_handle_get_nclx_color_profile(handle.get_raw_image_handle(), &nclx).code == heif_error_Ok && nclx != nullptr) {
+				if (nclx->transfer_characteristics == 16 || nclx->transfer_characteristics == 18) {
+					bIsHDR = true;
+				}
+				heif_nclx_color_profile_free(nclx);
 			}
-		} catch (...) {}
+		}
 	}
 
 	if (bIsHDR && pOutHDRPixels != nullptr) {
