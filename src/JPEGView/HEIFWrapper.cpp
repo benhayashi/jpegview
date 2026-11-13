@@ -71,6 +71,7 @@ void * HeifReader::ReadImage(int &width,
 				o++;
 			}
 		}
+	}
 	ICCProfileTransform::DeleteTransform(transform);
 
 	// Detect HDR characteristics (10/12-bit depth or NCLX PQ/HLG)
