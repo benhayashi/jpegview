@@ -22,7 +22,7 @@ permissions:
 jobs:
   build-x64:
     name: Build x64 Release
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -33,6 +33,21 @@ jobs:
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
+
+      - name: Locate ATL and Setup Environment
+        shell: pwsh
+        run: |
+          $atlHeader = Get-ChildItem -Path "C:\Program Files*" -Recurse -Filter "atlbase.h" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($atlHeader) {
+            Write-Host "Found ATL header at: $($atlHeader.DirectoryName)"
+            "INCLUDE=$($atlHeader.DirectoryName);$env:INCLUDE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            $msvcRoot = Split-Path (Split-Path $atlHeader.DirectoryName -Parent) -Parent
+            $atlLib = Join-Path $msvcRoot "atlmfc\lib\x64"
+            if (Test-Path $atlLib) {
+              Write-Host "Found ATL lib at: $atlLib"
+              "LIB=$atlLib;$env:LIB" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            }
+          }
 
       - name: Add WiX to PATH
         shell: pwsh
@@ -90,7 +105,7 @@ jobs:
 
   build-win32:
     name: Build Win32 Release
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -101,6 +116,21 @@ jobs:
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
+
+      - name: Locate ATL and Setup Environment
+        shell: pwsh
+        run: |
+          $atlHeader = Get-ChildItem -Path "C:\Program Files*" -Recurse -Filter "atlbase.h" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($atlHeader) {
+            Write-Host "Found ATL header at: $($atlHeader.DirectoryName)"
+            "INCLUDE=$($atlHeader.DirectoryName);$env:INCLUDE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            $msvcRoot = Split-Path (Split-Path $atlHeader.DirectoryName -Parent) -Parent
+            $atlLib = Join-Path $msvcRoot "atlmfc\lib\x86"
+            if (Test-Path $atlLib) {
+              Write-Host "Found ATL lib at: $atlLib"
+              "LIB=$atlLib;$env:LIB" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            }
+          }
 
       - name: Add WiX to PATH
         shell: pwsh
@@ -159,7 +189,7 @@ jobs:
   publish-release:
     name: Package and Publish Release
     needs: [build-x64, build-win32]
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
