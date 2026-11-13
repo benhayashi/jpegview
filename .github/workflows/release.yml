@@ -1,0 +1,252 @@
+name: Build & Publish Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name for release (e.g. v1.4.0)'
+        required: true
+        default: 'v1.4.0'
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-x64:
+    name: Build x64 Release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Init WTL Submodule
+        shell: bash
+        run: git submodule update --init deps/WTL-sf
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Add WiX to PATH
+        shell: pwsh
+        run: |
+          $wixPath = "C:\Program Files (x86)\WiX Toolset v3.11\bin"
+          if (Test-Path $wixPath) {
+            echo "$wixPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+
+      - name: Build x64 Solution
+        shell: cmd
+        run: |
+          msbuild.exe /p:Configuration=Release /p:Platform=x64 src\JPEGView.sln
+
+      - name: Stage x64 Artifacts
+        shell: pwsh
+        run: |
+          $ver = "${{ github.ref_name }}"
+          if ($ver -notmatch '^v\d') { $ver = "${{ inputs.tag_name }}" }
+          if (-not $ver) { $ver = "v1.4.0" }
+          $cleanVer = $ver.TrimStart('v')
+
+          New-Item -ItemType Directory -Force -Path "staging\JPEGView64"
+
+          # Copy x64 application binaries & codecs
+          Copy-Item -Path "src\JPEGView\bin\x64\Release\*" -Destination "staging\JPEGView64\" -Recurse
+
+          # Clean up unneeded build symbols
+          Remove-Item -Path "staging\JPEGView64\*.pdb" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "staging\JPEGView64\*.exp" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "staging\JPEGView64\*.lib" -Force -ErrorAction SilentlyContinue
+
+          # Copy docs
+          Copy-Item -Path "HowToInstall.txt" -Destination "staging\JPEGView64\" -ErrorAction SilentlyContinue
+          Copy-Item -Path "CHANGELOG.txt" -Destination "staging\JPEGView64\" -ErrorAction SilentlyContinue
+          Copy-Item -Path "README.md" -Destination "staging\JPEGView64\" -ErrorAction SilentlyContinue
+
+          # Standalone 64-bit Zip
+          Compress-Archive -Path "staging\JPEGView64\*" -DestinationPath "staging\JPEGView64_${cleanVer}.zip" -Force
+
+          # Copy x64 MSI Installer
+          $msi = Get-ChildItem -Path "src\JPEGView.Setup\bin\x64\Release" -Recurse -Filter "*.msi" | Select-Object -First 1
+          if ($msi) {
+            Copy-Item -Path $msi.FullName -Destination "staging\JPEGView64_en-us_${cleanVer}.msi" -Force
+          }
+
+      - name: Upload x64 Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-x64
+          path: |
+            staging/*.zip
+            staging/*.msi
+            staging/JPEGView64
+
+  build-win32:
+    name: Build Win32 Release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Init WTL Submodule
+        shell: bash
+        run: git submodule update --init deps/WTL-sf
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Add WiX to PATH
+        shell: pwsh
+        run: |
+          $wixPath = "C:\Program Files (x86)\WiX Toolset v3.11\bin"
+          if (Test-Path $wixPath) {
+            echo "$wixPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+
+      - name: Build Win32 Solution
+        shell: cmd
+        run: |
+          msbuild.exe /p:Configuration=Release /p:Platform=Win32 src\JPEGView.sln
+
+      - name: Stage Win32 Artifacts
+        shell: pwsh
+        run: |
+          $ver = "${{ github.ref_name }}"
+          if ($ver -notmatch '^v\d') { $ver = "${{ inputs.tag_name }}" }
+          if (-not $ver) { $ver = "v1.4.0" }
+          $cleanVer = $ver.TrimStart('v')
+
+          New-Item -ItemType Directory -Force -Path "staging\JPEGView32"
+
+          # Copy Win32 application binaries & codecs
+          Copy-Item -Path "src\JPEGView\bin\x86\Release\*" -Destination "staging\JPEGView32\" -Recurse
+
+          # Clean up unneeded build symbols
+          Remove-Item -Path "staging\JPEGView32\*.pdb" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "staging\JPEGView32\*.exp" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "staging\JPEGView32\*.lib" -Force -ErrorAction SilentlyContinue
+
+          # Copy docs
+          Copy-Item -Path "HowToInstall.txt" -Destination "staging\JPEGView32\" -ErrorAction SilentlyContinue
+          Copy-Item -Path "CHANGELOG.txt" -Destination "staging\JPEGView32\" -ErrorAction SilentlyContinue
+          Copy-Item -Path "README.md" -Destination "staging\JPEGView32\" -ErrorAction SilentlyContinue
+
+          # Standalone 32-bit Zip
+          Compress-Archive -Path "staging\JPEGView32\*" -DestinationPath "staging\JPEGView32_${cleanVer}.zip" -Force
+
+          # Copy Win32 MSI Installer
+          $msi = Get-ChildItem -Path "src\JPEGView.Setup\bin\x86\Release" -Recurse -Filter "*.msi" | Select-Object -First 1
+          if ($msi) {
+            Copy-Item -Path $msi.FullName -Destination "staging\JPEGView32_en-us_${cleanVer}.msi" -Force
+          }
+
+      - name: Upload Win32 Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-win32
+          path: |
+            staging/*.zip
+            staging/*.msi
+            staging/JPEGView32
+
+  publish-release:
+    name: Package and Publish Release
+    needs: [build-x64, build-win32]
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Assemble Release Packages & Checksums
+        shell: pwsh
+        run: |
+          $ver = "${{ github.ref_name }}"
+          if ($ver -notmatch '^v\d') { $ver = "${{ inputs.tag_name }}" }
+          if (-not $ver) { $ver = "v1.4.0" }
+          $cleanVer = $ver.TrimStart('v')
+
+          New-Item -ItemType Directory -Force -Path "release_assets"
+          New-Item -ItemType Directory -Force -Path "combined\JPEGView64"
+          New-Item -ItemType Directory -Force -Path "combined\JPEGView32"
+
+          # Collect installers and standalone zips
+          Get-ChildItem -Path "artifacts" -Recurse -Include "*.msi","*.zip" | ForEach-Object {
+            Copy-Item -Path $_.FullName -Destination "release_assets\" -Force
+          }
+
+          # Assemble combined package
+          if (Test-Path "artifacts\build-x64\staging\JPEGView64") {
+            Copy-Item -Path "artifacts\build-x64\staging\JPEGView64\*" -Destination "combined\JPEGView64\" -Recurse
+            # Put 64-bit JPEGView.exe as primary in root
+            Copy-Item -Path "artifacts\build-x64\staging\JPEGView64\*" -Destination "combined\" -Recurse
+          }
+          if (Test-Path "artifacts\build-win32\staging\JPEGView32") {
+            Copy-Item -Path "artifacts\build-win32\staging\JPEGView32\*" -Destination "combined\JPEGView32\" -Recurse
+          }
+          Copy-Item -Path "HowToInstall.txt" -Destination "combined\" -ErrorAction SilentlyContinue
+          Copy-Item -Path "CHANGELOG.txt" -Destination "combined\" -ErrorAction SilentlyContinue
+          Copy-Item -Path "README.md" -Destination "combined\" -ErrorAction SilentlyContinue
+
+          Compress-Archive -Path "combined\*" -DestinationPath "release_assets\JPEGView_${cleanVer}.zip" -Force
+
+          # Generate SHA256SUMS
+          Push-Location release_assets
+          $sums = Get-ChildItem -File | Where-Object { $_.Name -ne "SHA256SUMS" } | ForEach-Object {
+            $hash = (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLower()
+            "$hash *${($_.Name)}"
+          }
+          $sums | Out-File -FilePath "SHA256SUMS" -Encoding ascii
+          Pop-Location
+
+          Write-Host "Prepared Release Files:"
+          Get-ChildItem -Path release_assets | Format-Table Name, Length
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name != 'master' && github.ref_name || inputs.tag_name || 'v1.4.0' }}
+          name: "${{ github.ref_name != 'master' && github.ref_name || inputs.tag_name || 'v1.4.0' }} - Native HDR Display & Modern Format Support"
+          draft: false
+          prerelease: ${{ inputs.prerelease || false }}
+          files: release_assets/*
+          body: |
+            ## JPEGView ${{ github.ref_name != 'master' && github.ref_name || inputs.tag_name || 'v1.4.0' }}
+
+            Modernized, ultra-fast, and lightweight image viewer with native Direct3D 11 scRGB HDR display, intelligent SDR tone mapping, comprehensive modern format decoding, and seamless Windows 11 default photo viewer integration.
+
+            ### 🌟 Key Highlights & Modern Features
+            - **Native Direct3D 11 scRGB HDR Pipeline**: True HDR display utilizing an FP16 (`DXGI_FORMAT_R16G16B16A16_FLOAT`) scRGB linear swapchain with automatic monitor peak luminance detection via `IDXGIOutput6`.
+            - **Intelligent SDR Tone Mapping**: View HDR photos on SDR monitors or standard color profiles using BT.2390 Hermite spline knee, ACES filmic, and Reinhard tone curves.
+            - **Instant Hotkey Toggle (`H`)**: Switch dynamically between true HDR and tone-mapped SDR with real-time `[HDR]` and `[HDR->SDR]` title badges.
+            - **Modern Format Support**:
+              - **HEIC / HEIF / HIF**: 10-bit and 12-bit depth, NCLX PQ (SMPTE 2084) & HLG transfer curves, FP16 linear RGBA output buffers.
+              - **JPEG XL (`.jxl`)**: Native high bit-depth and HDR container decoding.
+              - **AVIF**: AV1 still and sequence support.
+              - **WebP & Animated WebP**: Modern lossless and lossy support.
+              - **QOI & Photoshop PSD/PSB**: Fast Quite OK Image and large Photoshop document support.
+              - **Camera RAW**: Up-to-date LibRaw camera support (Canon CR2/CR3, Sony ARW, Nikon NEF, Adobe DNG, etc.).
+            - **Windows 10 & 11 Default Photo Viewer**:
+              - 1-click association deep-linking to `ms-settings:defaultapps?appName=JPEGView`.
+              - `RegisteredApplications` capabilities in installer and portable configuration.
+            - **Sub-10ms Startup Time**: All heavy decoders and DirectX subsystems are delay-loaded strictly on demand.
+            - **100% Offline & Zero Telemetry**: Zero tracking, network calls, or background telemetry.
+
+            ### 📦 Downloads & Installation
+            - **64-bit Installer (Recommended for Windows 10 & 11)**: `JPEGView64_en-us_${{ github.ref_name != 'master' && github.ref_name || inputs.tag_name || 'v1.4.0' }}.msi`
+            - **32-bit Installer**: `JPEGView32_en-us_${{ github.ref_name != 'master' && github.ref_name || inputs.tag_name || 'v1.4.0' }}.msi`
+            - **64-bit Standalone Portable**: `JPEGView64_${{ github.ref_name != 'master' && github.ref_name || inputs.tag_name || 'v1.4.0' }}.zip`
+            - **32-bit Standalone Portable**: `JPEGView32_${{ github.ref_name != 'master' && github.ref_name || inputs.tag_name || 'v1.4.0' }}.zip`
+            - **Combined Portable (Both 32 & 64-bit)**: `JPEGView_${{ github.ref_name != 'master' && github.ref_name || inputs.tag_name || 'v1.4.0' }}.zip`
+            - **Checksums**: See `SHA256SUMS` to verify file authenticity.
