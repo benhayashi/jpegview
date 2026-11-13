@@ -217,15 +217,18 @@ jobs:
           }
 
           # Assemble combined package
-          if (Test-Path "artifacts\build-x64\staging\JPEGView64") {
-            Copy-Item -Path "artifacts\build-x64\staging\JPEGView64\*" -Destination "combined\JPEGView64\" -Recurse
-            # Put 64-bit JPEGView.exe as primary in root
-            Copy-Item -Path "artifacts\build-x64\staging\JPEGView64\*" -Destination "combined\" -Recurse
+          $dir64 = Get-ChildItem -Path "artifacts" -Recurse -Directory -Filter "JPEGView64" | Select-Object -First 1
+          if ($dir64) {
+            Write-Host "Found JPEGView64 directory at: $($dir64.FullName)"
+            Copy-Item -Path "$($dir64.FullName)\*" -Destination "combined\JPEGView64\" -Recurse -Force
           }
-          if (Test-Path "artifacts\build-win32\staging\JPEGView32") {
-            Copy-Item -Path "artifacts\build-win32\staging\JPEGView32\*" -Destination "combined\JPEGView32\" -Recurse
+          $dir32 = Get-ChildItem -Path "artifacts" -Recurse -Directory -Filter "JPEGView32" | Select-Object -First 1
+          if ($dir32) {
+            Write-Host "Found JPEGView32 directory at: $($dir32.FullName)"
+            Copy-Item -Path "$($dir32.FullName)\*" -Destination "combined\JPEGView32\" -Recurse -Force
           }
           Copy-Item -Path "HowToInstall.txt" -Destination "combined\" -ErrorAction SilentlyContinue
+          Copy-Item -Path "HowToInstall_ru.txt" -Destination "combined\" -ErrorAction SilentlyContinue
           Copy-Item -Path "CHANGELOG.txt" -Destination "combined\" -ErrorAction SilentlyContinue
           Copy-Item -Path "README.md" -Destination "combined\" -ErrorAction SilentlyContinue
 
@@ -235,7 +238,7 @@ jobs:
           Push-Location release_assets
           $sums = Get-ChildItem -File | Where-Object { $_.Name -ne "SHA256SUMS" } | ForEach-Object {
             $hash = (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLower()
-            "$hash *${($_.Name)}"
+            "$hash *$($_.Name)"
           }
           $sums | Out-File -FilePath "SHA256SUMS" -Encoding ascii
           Pop-Location
